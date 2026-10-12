@@ -1,0 +1,47 @@
+
+import nmap
+
+# Create a PortScanner object
+scanner = nmap.PortScanner()
+
+# Get target IP address
+target = input("Enter target IP address: ")
+
+try:
+    # Perform OS and service version detection
+    scanner.scan(hosts=target, arguments="-O -sV")
+
+    for host in scanner.all_hosts():
+        print("\nTarget IP:", host)
+        print("Status:", scanner[host].state())
+
+        # Display OS details
+        if "osmatch" in scanner[host]:
+            print("\nOperating System Guesses:")
+            for os in scanner[host]["osmatch"]:
+                print("OS:", os["name"])
+                print("Accuracy:", os["accuracy"] + "%")
+        else:
+            print("\nOS details not detected.")
+
+        # Display open ports and services
+        print("\nOpen Ports and Services:")
+        for protocol in scanner[host].all_protocols():
+            for port in sorted(scanner[host][protocol].keys()):
+                details = scanner[host][protocol][port]
+                if details["state"] == "open":
+                    print("Port:", port)
+                    print("Protocol:", protocol)
+                    print("Service:", details["name"])
+                    print("Version:", details.get("version", "Unknown"))
+                    print("-" * 30)
+
+        # Display network distance
+        distance = scanner[host].get("distance", {})
+        if distance:
+            print("Network Distance:", distance.get("value", "Unknown"), "hops")
+        else:
+            print("Network Distance: Not available")
+
+except Exception as e:
+    print("Error:", e)
